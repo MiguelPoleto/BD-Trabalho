@@ -10,115 +10,133 @@ Trabalho 6 da disciplina **Tópicos Especiais em Banco de Dados**. Aplicação w
 
 ## Requisitos
 
-- Python 3.10 ou superior
-- MongoDB Community Server 6.0 ou superior, ou Docker com Docker Compose
-- Navegador web atualizado
+- Docker Engine e Docker Compose (modo recomendado); ou
+- Python 3.10 ou superior e MongoDB Community Server 6.0 ou superior (modo local)
+- Navegador atualizado
 
-O MongoDB não está incluído no Python: é necessário iniciar um servidor MongoDB antes de usar o sistema. O Docker Compose abaixo é a forma mais simples de iniciar o banco; alternativamente, instale o MongoDB Community Server para seu sistema operacional seguindo o [guia oficial de instalação](https://www.mongodb.com/docs/manual/installation/). Para instalar Docker e Docker Compose no Ubuntu, siga o [guia oficial do Docker Engine](https://docs.docker.com/engine/install/ubuntu/).
+Para instalar Docker no Ubuntu, siga o [guia oficial do Docker Engine](https://docs.docker.com/engine/install/ubuntu/). Sem Docker, instale o MongoDB Community Server conforme o [guia oficial](https://www.mongodb.com/docs/manual/installation/).
 
-## Como executar
+## Executar a aplicação com Docker
 
-### 1. Inicie o MongoDB
-
-Com Docker instalado, na pasta do projeto execute:
+Na pasta do projeto, suba os serviços:
 
 ```bash
-sudo docker compose up -d
+sudo docker compose up -d --build
 ```
 
-Isso inicia o MongoDB na porta `27017` e persiste os dados no volume `mongodb_data`. Para parar o servico sem apagar os dados:
+O Compose constrói a aplicação, prepara um ambiente virtual Python **dentro da imagem Docker**, inicia o MongoDB e aguarda o banco ficar pronto antes de subir o site. Acesse [http://127.0.0.1:5000](http://127.0.0.1:5000).
+
+Se a porta `5000` já estiver ocupada, escolha outra porta no computador:
+
+```bash
+sudo env APP_PORT=5050 docker compose up -d --build
+```
+
+Nesse caso, acesse [http://127.0.0.1:5050](http://127.0.0.1:5050).
+
+Para conferir os serviços e acompanhar os registros da aplicação:
+
+```bash
+sudo docker compose ps
+sudo docker compose logs -f app
+```
+
+Para encerrar sem apagar os dados:
 
 ```bash
 sudo docker compose down
 ```
 
-Sem Docker, instale o MongoDB Community Server pelo guia oficial acima e inicie o serviço local. O sistema usa por padrão `mongodb://localhost:27017`.
+Os dados do MongoDB ficam no volume `mongodb_data`. O ambiente virtual do container fica em `/opt/venv`; não é necessário instalar Python nem pacotes no computador para usar esta opção.
 
-### 2. Prepare o ambiente Python
+### Executar somente o banco no Docker
 
-Linux/macOS:
+Se preferir executar o Flask no computador, inicie somente o MongoDB:
+
+```bash
+sudo docker compose up -d mongodb
+```
+
+Prepare o ambiente Python do projeto e instale as dependências:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-```
-
-Windows (PowerShell):
-
-```powershell
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-```
-
-### 3. Rode o sistema
-
-```bash
 python app.py
 ```
 
-Abra [http://127.0.0.1:5000](http://127.0.0.1:5000). A aplicação usa o banco `basquete_db` e cria as coleções quando os dados são inseridos.
+Abra [http://127.0.0.1:5000](http://127.0.0.1:5000). A aplicação usa o banco `basquete_db`, no endereço padrão `mongodb://localhost:27017`.
 
-### Carregar dados de demonstração
+Também é possível instalar o MongoDB Community Server diretamente no computador e executar a aplicação no ambiente Python local.
 
-Na aplicação, abra o link discreto **Ferramentas de demonstração** no rodapé. Na página aberta, clique em **Carregar dados de demonstração** e confirme a ação. O sistema adiciona quatro equipes, vinte jogadores e oito partidas fictícias.
+## Dados de demonstração e filtros
 
-Os dados de exemplo podem ser carregados novamente: os mesmos registros são atualizados sem duplicação, e os demais dados são mantidos.
+Na aplicação, abra **Ferramentas de demonstração** no rodapé. Clique em **Carregar dados de demonstração** e confirme: são adicionadas quatro equipes, vinte jogadores e oito partidas fictícias. A ação pode ser repetida sem duplicar exemplos ou apagar outros registros.
 
-Configurações opcionais:
+As listas da visão geral, equipes, jogadores, partidas e resultados das consultas têm busca instantânea com sugestões. Os filtros de cidade, posição, equipe, resultado e período podem ser combinados; a busca não diferencia letras acentuadas. Esses filtros rápidos atuam sobre os registros exibidos na tela. As cinco consultas da página **Consultas** são executadas no MongoDB.
 
-- `MONGODB_URI`: endereco de conexao (padrao `mongodb://localhost:27017`)
-- `MONGODB_DATABASE`: nome do banco (padrao `basquete_db`)
-- `SECRET_KEY`: chave de sessão do Flask
-- `FLASK_DEBUG=1`: ativa o modo de depuracao local
-
-Exemplo Linux/macOS:
-
-```bash
-MONGODB_URI="mongodb://localhost:27017" MONGODB_DATABASE="basquete_db" python app.py
-```
-
-## O que o sistema faz
+## Funcionalidades e buscas
 
 - CRUD completo (inserir, listar, atualizar e remover) para equipes, jogadores e partidas.
-- Valida campos obrigatórios, placares e referências entre coleções.
-- Impede remover uma equipe que ainda tenha jogadores ou partidas vinculadas.
-- Exibe um painel com contagens e partidas recentes.
-- Oferece cinco consultas MongoDB:
-  1. Elenco de jogadores por equipe.
+- Validação de campos obrigatórios, placares e referências entre coleções.
+- Proteção contra a remoção de equipes que ainda tenham jogadores ou partidas vinculadas.
+- Painel com contagens, partidas recentes, busca instantânea e filtros.
+- Cinco consultas MongoDB:
+  1. Elenco de jogadores por equipe (`team_id`).
   2. Jogadores por posição.
-  3. Partidas dentro de um período.
-  4. Histórico de partidas de uma equipe (mandante ou visitante).
-  5. Partidas por resultado: vitoria do mandante ou vitoria do visitante.
+  3. Partidas em um período (`$gte` / `$lte`).
+  4. Histórico de uma equipe como mandante ou visitante (`$or`).
+  5. Vitórias do mandante ou visitante, comparando os placares (`$expr`).
 
 ## Modelo de dados
 
-| Colecao | Campos principais | Relacionamentos |
+| Coleção | Campos principais | Relacionamentos |
 | --- | --- | --- |
-| `teams` | `name`, `city`, `coach` | Equipe |
+| `teams` | `name`, `city`, `coach` | Dados da equipe |
 | `players` | `name`, `number`, `position`, `team_id` | `team_id` referencia `teams._id` |
 | `games` | `home_team_id`, `away_team_id`, `home_score`, `away_score`, `played_at`, `venue` | As duas equipes referenciam `teams._id` |
 
-Os relacionamentos entre documentos são armazenados como `ObjectId`, e as consultas usam filtros e comparações do MongoDB.
+Os relacionamentos entre documentos são armazenados como `ObjectId`. A carga de demonstração recria os documentos de exemplo com identificadores estáveis, para poder ser repetida sem duplicações.
+
+## Consultar o banco durante a apresentação
+
+Com os serviços Docker em execução, abra o shell do MongoDB:
+
+```bash
+sudo docker compose exec mongodb mongosh basquete_db
+```
+
+No prompt do `mongosh`, use:
+
+```javascript
+show collections
+db.teams.find().limit(3)
+db.players.findOne()
+db.games.findOne()
+```
+
+Digite `exit` para sair do shell.
 
 ## Testes
 
 Os testes usam `mongomock`, um banco em memória, e não precisam de um servidor MongoDB ativo:
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
 python -m pip install -r requirements-dev.txt
 python -m unittest discover -s tests -v
 ```
 
-## Entrega compactada
+## Enviar o trabalho
 
-Para criar o arquivo a enviar ao AVA no Linux/macOS:
+Crie o ZIP na pasta do projeto:
 
 ```bash
-zip -r trabalho6.zip app.py seed.py templates static tests requirements.txt requirements-dev.txt docker-compose.yml README.md .gitignore
+zip -r trabalho6.zip app.py seed.py Dockerfile .dockerignore templates static tests requirements.txt requirements-dev.txt docker-compose.yml README.md .gitignore
 ```
 
-Não inclua a pasta `.venv` nem dados locais do MongoDB no arquivo.
+O arquivo contém o código, a configuração para recriar o banco e os dados de demonstração; não inclua `.venv` nem os arquivos de dados internos do MongoDB.
 
-> Este projeto é um trabalho acadêmico para execução local. Não possui autenticação, proteção CSRF ou configuração de produção; não o exponha diretamente à internet.
+> Projeto acadêmico para execução local. Não possui autenticação, proteção CSRF ou configuração de produção; não o exponha diretamente à internet.

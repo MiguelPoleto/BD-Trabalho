@@ -23,15 +23,28 @@
   <section class="panel table-panel">
     <div class="section-heading"><div><p class="eyebrow">CALENDÁRIO E RESULTADOS</p><h2>Partidas cadastradas <span class="count">{{ games|length }}</span></h2></div></div>
     {% if games %}
-      <div class="table-wrap"><table>
+      <div class="table-toolbar" data-table-filter data-table="#games-table" data-item-label="partidas">
+        <label class="search-box">
+          <span class="search-symbol" aria-hidden="true">⌕</span>
+          <input type="search" data-search-input aria-label="Buscar partidas" placeholder="Buscar equipe, ginásio ou placar…" list="game-suggestions">
+        </label>
+        <datalist id="game-suggestions">{% for team in teams %}<option value="{{ team.name }}">{% endfor %}{% for game in games %}{% if game.venue %}<option value="{{ game.venue }}">{% endif %}<option value="{{ game.home_score }} : {{ game.away_score }}">{% endfor %}</datalist>
+        <label class="filter-select"><span class="sr-only">Filtrar por resultado</span><select data-filter-key="result" aria-label="Filtrar por resultado"><option value="">Todos os resultados</option><option value="home">Vitória do mandante</option><option value="away">Vitória do visitante</option><option value="draw">Empate</option></select></label>
+        <label class="date-filter"><span>De</span><input type="date" data-date-from aria-label="Data inicial"></label>
+        <label class="date-filter"><span>Até</span><input type="date" data-date-to aria-label="Data final"></label>
+        <button class="filter-reset" type="button" data-filter-reset>Limpar filtros</button>
+        <span class="filter-count" data-filter-count aria-live="polite"></span>
+      </div>
+      <div class="table-wrap"><table id="games-table">
         <thead><tr><th>Data</th><th>Mandante</th><th>Placar</th><th>Visitante</th><th>Ginásio</th><th>Ações</th></tr></thead>
         <tbody>{% for game in games %}
-          <tr><td><time datetime="{{ game.played_at }}">{{ game.played_at|date_br }}</time></td><td>{{ team_labels.get(game.home_team_id|string, "Equipe removida") }}</td><td class="score">{{ game.home_score }} <span>:</span> {{ game.away_score }}</td><td>{{ team_labels.get(game.away_team_id|string, "Equipe removida") }}</td><td>{{ game.venue or "-" }}</td>
+          <tr data-filter-row data-search="{{ [team_labels.get(game.home_team_id|string, ''), team_labels.get(game.away_team_id|string, ''), game.venue, game.home_score|string, game.away_score|string, game.played_at]|join(' ')|lower }}" data-date="{{ game.played_at }}" data-result="{% if game.home_score > game.away_score %}home{% elif game.away_score > game.home_score %}away{% else %}draw{% endif %}"><td><time datetime="{{ game.played_at }}">{{ game.played_at|date_br }}</time></td><td>{{ team_labels.get(game.home_team_id|string, "Equipe removida") }}</td><td class="score">{{ game.home_score }} <span>:</span> {{ game.away_score }}</td><td>{{ team_labels.get(game.away_team_id|string, "Equipe removida") }}</td><td>{{ game.venue or "-" }}</td>
             <td class="actions"><a class="action-link" href="{{ url_for('edit_game', identifier=game._id) }}">Editar</a>
               <form method="post" action="{{ url_for('delete_game', identifier=game._id) }}" onsubmit="return confirm('Remover esta partida?')"><button class="text-button danger-text" type="submit">Remover</button></form>
             </td></tr>
         {% endfor %}</tbody>
       </table></div>
+      <div class="empty-state filter-empty" data-filter-empty hidden><span class="empty-icon" aria-hidden="true">⌕</span><p>Nenhuma partida corresponde aos filtros.</p><span>Experimente outro termo ou limpe os filtros.</span></div>
     {% else %}<div class="empty-state"><span class="empty-icon" aria-hidden="true">PT</span><p>Nenhuma partida cadastrada ainda.</p><span>Registre o primeiro confronto pelo formulário acima.</span></div>{% endif %}
   </section>
 {% endblock %}

@@ -43,15 +43,25 @@
     <section class="panel results table-panel">
       <div class="section-heading"><div><p class="eyebrow">BUSCA CONCLUÍDA</p><h2>Resultados <span class="count">{{ results|length }}</span></h2></div></div>
       {% if results %}
-        <div class="table-wrap"><table>
+        <div class="table-toolbar compact-toolbar" data-table-filter data-table="#search-results-table" data-item-label="resultados">
+          <label class="search-box">
+            <span class="search-symbol" aria-hidden="true">⌕</span>
+            <input type="search" data-search-input aria-label="Filtrar resultados da consulta" placeholder="Filtrar os resultados…" list="result-suggestions">
+          </label>
+          <datalist id="result-suggestions">{% for item in results %}{% if kind == "roster" or kind == "position" %}<option value="{{ item.name }}"><option value="{{ item.number }}"><option value="{{ team_labels.get(item.team_id|string, '') }}">{% else %}<option value="{{ team_labels.get(item.home_team_id|string, '') }}"><option value="{{ team_labels.get(item.away_team_id|string, '') }}">{% if item.venue %}<option value="{{ item.venue }}">{% endif %}{% endif %}{% endfor %}</datalist>
+          <button class="filter-reset" type="button" data-filter-reset>Limpar</button>
+          <span class="filter-count" data-filter-count aria-live="polite"></span>
+        </div>
+        <div class="table-wrap"><table id="search-results-table">
           {% if kind == "roster" or kind == "position" %}
             <thead><tr><th>Jogador</th><th>Camisa</th><th>Posição</th><th>Equipe</th></tr></thead>
-            <tbody>{% for player in results %}<tr><td class="primary-cell">{{ player.name }}</td><td>{{ player.number }}</td><td>{{ position_labels.get(player.position, player.position) }}</td><td>{{ team_labels.get(player.team_id|string, "Equipe removida") }}</td></tr>{% endfor %}</tbody>
+            <tbody>{% for player in results %}<tr data-filter-row data-search="{{ [player.name, player.number|string, player.position, position_labels.get(player.position, player.position), team_labels.get(player.team_id|string, '')]|join(' ')|lower }}"><td class="primary-cell">{{ player.name }}</td><td>{{ player.number }}</td><td>{{ position_labels.get(player.position, player.position) }}</td><td>{{ team_labels.get(player.team_id|string, "Equipe removida") }}</td></tr>{% endfor %}</tbody>
           {% else %}
             <thead><tr><th>Data</th><th>Mandante</th><th>Placar</th><th>Visitante</th><th>Ginásio</th></tr></thead>
-            <tbody>{% for game in results %}<tr><td><time datetime="{{ game.played_at }}">{{ game.played_at|date_br }}</time></td><td>{{ team_labels.get(game.home_team_id|string, "Equipe removida") }}</td><td class="score">{{ game.home_score }} <span>:</span> {{ game.away_score }}</td><td>{{ team_labels.get(game.away_team_id|string, "Equipe removida") }}</td><td>{{ game.venue or "-" }}</td></tr>{% endfor %}</tbody>
+            <tbody>{% for game in results %}<tr data-filter-row data-search="{{ [team_labels.get(game.home_team_id|string, ''), team_labels.get(game.away_team_id|string, ''), game.venue, game.home_score|string, game.away_score|string, game.played_at]|join(' ')|lower }}"><td><time datetime="{{ game.played_at }}">{{ game.played_at|date_br }}</time></td><td>{{ team_labels.get(game.home_team_id|string, "Equipe removida") }}</td><td class="score">{{ game.home_score }} <span>:</span> {{ game.away_score }}</td><td>{{ team_labels.get(game.away_team_id|string, "Equipe removida") }}</td><td>{{ game.venue or "-" }}</td></tr>{% endfor %}</tbody>
           {% endif %}
         </table></div>
+        <div class="empty-state filter-empty" data-filter-empty hidden><span class="empty-icon" aria-hidden="true">⌕</span><p>Nenhum resultado corresponde à busca.</p><span>Experimente outro termo ou limpe o filtro.</span></div>
       {% else %}<div class="empty-state"><span class="empty-icon" aria-hidden="true">?</span><p>Nenhum resultado encontrado.</p><span>Experimente outros filtros ou cadastre novos dados.</span></div>{% endif %}
     </section>
   {% endif %}

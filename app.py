@@ -398,4 +398,7 @@ if __name__ == "__main__":
         raise SystemExit(
             "Não foi possível conectar ao MongoDB. Inicie o servidor e confira MONGODB_URI."
         ) from error
-    app.run(debug=os.getenv("FLASK_DEBUG") == "1")
+    app.run(
+        host=os.getenv("FLASK_HOST", "127.0.0.1"),
+        debug=os.getenv("FLASK_DEBUG") == "1",
+    )

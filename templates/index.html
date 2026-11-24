@@ -42,12 +42,21 @@
       <a class="section-link" href="{{ url_for('list_games') }}">Todas as partidas <span aria-hidden="true">→</span></a>
     </div>
     {% if latest_games %}
+      <div class="table-toolbar compact-toolbar" data-table-filter data-table="#dashboard-games-table" data-item-label="partidas">
+        <label class="search-box">
+          <span class="search-symbol" aria-hidden="true">⌕</span>
+          <input type="search" data-search-input aria-label="Buscar nas partidas recentes" placeholder="Filtrar por equipe ou ginásio…" list="dashboard-suggestions">
+        </label>
+        <datalist id="dashboard-suggestions">{% for game in latest_games %}<option value="{{ team_labels.get(game.home_team_id|string, '') }}"><option value="{{ team_labels.get(game.away_team_id|string, '') }}">{% if game.venue %}<option value="{{ game.venue }}">{% endif %}{% endfor %}</datalist>
+        <button class="filter-reset" type="button" data-filter-reset>Limpar</button>
+        <span class="filter-count" data-filter-count aria-live="polite"></span>
+      </div>
       <div class="table-wrap">
-        <table>
+        <table id="dashboard-games-table">
           <thead><tr><th>Data</th><th>Mandante</th><th>Placar</th><th>Visitante</th><th>Ginásio</th></tr></thead>
           <tbody>
           {% for game in latest_games %}
-            <tr>
+            <tr data-filter-row data-search="{{ [team_labels.get(game.home_team_id|string, ''), team_labels.get(game.away_team_id|string, ''), game.venue, game.home_score|string, game.away_score|string]|join(' ')|lower }}">
               <td><time datetime="{{ game.played_at }}">{{ game.played_at|date_br }}</time></td>
               <td>{{ team_labels.get(game.home_team_id|string, "Equipe removida") }}</td>
               <td class="score">{{ game.home_score }} <span>:</span> {{ game.away_score }}</td>
@@ -58,6 +67,7 @@
           </tbody>
         </table>
       </div>
+      <div class="empty-state filter-empty" data-filter-empty hidden><span class="empty-icon" aria-hidden="true">⌕</span><p>Nenhuma partida corresponde à busca.</p><span>Experimente outro termo ou limpe o filtro.</span></div>
     {% else %}
       <div class="empty-state">
         <span class="empty-icon" aria-hidden="true">🏀</span>

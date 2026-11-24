@@ -21,15 +21,27 @@
   <section class="panel table-panel">
     <div class="section-heading"><div><p class="eyebrow">ATLETAS INSCRITOS</p><h2>Jogadores cadastrados <span class="count">{{ players|length }}</span></h2></div></div>
     {% if players %}
-      <div class="table-wrap"><table>
+      <div class="table-toolbar" data-table-filter data-table="#players-table" data-item-label="jogadores">
+        <label class="search-box">
+          <span class="search-symbol" aria-hidden="true">⌕</span>
+          <input type="search" data-search-input aria-label="Buscar jogadores" placeholder="Buscar nome, camisa ou equipe…" list="player-suggestions">
+        </label>
+        <datalist id="player-suggestions">{% for player in players %}<option value="{{ player.name }}"><option value="{{ player.number }}">{% endfor %}{% for team in teams %}<option value="{{ team.name }}">{% endfor %}</datalist>
+        <label class="filter-select"><span class="sr-only">Filtrar por posição</span><select data-filter-key="position" aria-label="Filtrar por posição"><option value="">Todas as posições</option>{% for position in positions %}<option value="{{ position }}">{{ position_labels.get(position, position) }}</option>{% endfor %}</select></label>
+        <label class="filter-select"><span class="sr-only">Filtrar por equipe</span><select data-filter-key="team" aria-label="Filtrar por equipe"><option value="">Todas as equipes</option>{% for team in teams %}<option value="{{ team._id }}">{{ team.name }}</option>{% endfor %}</select></label>
+        <button class="filter-reset" type="button" data-filter-reset>Limpar filtros</button>
+        <span class="filter-count" data-filter-count aria-live="polite"></span>
+      </div>
+      <div class="table-wrap"><table id="players-table">
         <thead><tr><th>Jogador</th><th>Camisa</th><th>Posição</th><th>Equipe</th><th>Ações</th></tr></thead>
         <tbody>{% for player in players %}
-          <tr><td class="primary-cell">{{ player.name }}</td><td>{{ player.number }}</td><td>{{ position_labels.get(player.position, player.position) }}</td><td>{{ team_labels.get(player.team_id|string, "Equipe removida") }}</td>
+          <tr data-filter-row data-search="{{ [player.name, player.number|string, player.position, position_labels.get(player.position, player.position), team_labels.get(player.team_id|string, '')]|join(' ')|lower }}" data-position="{{ player.position|lower }}" data-team="{{ player.team_id|string }}"><td class="primary-cell">{{ player.name }}</td><td>{{ player.number }}</td><td>{{ position_labels.get(player.position, player.position) }}</td><td>{{ team_labels.get(player.team_id|string, "Equipe removida") }}</td>
             <td class="actions"><a class="action-link" href="{{ url_for('edit_player', identifier=player._id) }}">Editar</a>
               <form method="post" action="{{ url_for('delete_player', identifier=player._id) }}" onsubmit="return confirm('Remover este jogador?')"><button class="text-button danger-text" type="submit">Remover</button></form>
             </td></tr>
         {% endfor %}</tbody>
       </table></div>
+      <div class="empty-state filter-empty" data-filter-empty hidden><span class="empty-icon" aria-hidden="true">⌕</span><p>Nenhum jogador corresponde aos filtros.</p><span>Experimente outro termo ou limpe os filtros.</span></div>
     {% else %}<div class="empty-state"><span class="empty-icon" aria-hidden="true">JG</span><p>Nenhum jogador cadastrado ainda.</p><span>Adicione atletas ao elenco pelo formulário acima.</span></div>{% endif %}
   </section>
 {% endblock %}

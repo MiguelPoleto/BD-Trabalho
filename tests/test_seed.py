@@ -50,6 +50,9 @@ class SeedTests(unittest.TestCase):
         self.assertEqual(self.database.games.count_documents({}), len(GAMES))
         self.assertIn("23/03/2026".encode(), client.get("/").data)
         self.assertIn("Ala-pivô".encode(), client.get("/players").data)
+        for path in ("/teams", "/players", "/games", "/search"):
+            with self.subTest(path=path):
+                self.assertEqual(client.get(path).status_code, 200)
 
         client.post("/tools/demo-data")
         self.assertEqual(self.database.teams.count_documents({}), len(TEAMS) + 1)
