@@ -125,7 +125,7 @@ class BasketballAppTests(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         response = self.client.get("/search?kind=dates&start=2026-04-01&end=2026-03-01")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Informe um intervalo de datas valido.".encode(), response.data)
+        self.assertIn("Informe um intervalo de datas válido.".encode(), response.data)
 
 
 if __name__ == "__main__":

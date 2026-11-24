@@ -7,8 +7,11 @@ from flask import Flask, abort, flash, redirect, render_template, request, url_f
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
+from seed import populate_database
 
 POSITIONS = ("Armador", "Ala-armador", "Ala", "Ala-pivo", "Pivo")
+# Preserva os valores existentes no banco e exibe a grafia correta na interface.
+POSITION_LABELS = {"Ala-pivo": "Ala-pivô", "Pivo": "Pivô"}
 
 
 def create_app(database=None):
@@ -27,7 +30,11 @@ def create_app(database=None):
     teams = database["teams"]
     players = database["players"]
     games = database["games"]
-    # Os campos *_team_id ligam jogadores e partidas aos documentos da colecao teams.
+    # Os campos *_team_id ligam jogadores e partidas às equipes cadastradas.
+
+    @app.template_filter("date_br")
+    def format_date(value):
+        return date.fromisoformat(value).strftime("%d/%m/%Y")
 
     def all_teams():
         return list(teams.find().sort("name", 1))
@@ -70,6 +77,25 @@ def create_app(database=None):
             team_labels=team_labels(),
         )
 
+    @app.get("/tools/demo-data")
+    def demo_data():
+        return render_template(
+            "demo_data.html",
+            team_count=teams.count_documents({}),
+            player_count=players.count_documents({}),
+            game_count=games.count_documents({}),
+        )
+
+    @app.post("/tools/demo-data")
+    def load_demo_data():
+        counts = populate_database(database)
+        flash(
+            f"Dados prontos para a apresentação: {counts['teams']} equipes, "
+            f"{counts['players']} jogadores e {counts['games']} partidas.",
+            "success",
+        )
+        return redirect(url_for("demo_data"))
+
     @app.get("/teams")
     def list_teams():
         return render_template("teams.html", teams=all_teams(), edit_team=None)
@@ -80,7 +106,7 @@ def create_app(database=None):
         city = request.form.get("city", "").strip()
         coach = request.form.get("coach", "").strip()
         if not name or not city:
-            flash("Nome e cidade sao obrigatorios.", "error")
+            flash("Nome e cidade são obrigatórios.", "error")
             return redirect(url_for("list_teams"))
         teams.insert_one({"name": name, "city": city, "coach": coach})
         flash("Equipe cadastrada.", "success")
@@ -98,7 +124,7 @@ def create_app(database=None):
         city = request.form.get("city", "").strip()
         coach = request.form.get("coach", "").strip()
         if not name or not city:
-            flash("Nome e cidade sao obrigatorios.", "error")
+            flash("Nome e cidade são obrigatórios.", "error")
             return redirect(url_for("edit_team", identifier=identifier))
         teams.update_one(
             {"_id": ObjectId(identifier)},
@@ -111,11 +137,11 @@ def create_app(database=None):
     def delete_team(identifier):
         team = document_or_404(teams, identifier)
         team_id = team["_id"]
-        # Mantem os relacionamentos validos, impedindo remover equipes em uso.
+        # Mantém os relacionamentos válidos, impedindo remover equipes em uso.
         if players.find_one({"team_id": team_id}) or games.find_one(
             {"$or": [{"home_team_id": team_id}, {"away_team_id": team_id}]}
         ):
-            flash("Nao e possivel remover uma equipe vinculada a jogadores ou partidas.", "error")
+            flash("Não é possível remover uma equipe vinculada a jogadores ou partidas.", "error")
         else:
             teams.delete_one({"_id": team_id})
             flash("Equipe removida.", "success")
@@ -130,6 +156,7 @@ def create_app(database=None):
             teams=all_teams(),
             team_labels=team_labels(),
             positions=POSITIONS,
+            position_labels=POSITION_LABELS,
             edit_player=None,
         )
 
@@ -149,7 +176,7 @@ def create_app(database=None):
             or team_id is None
             or teams.find_one({"_id": team_id}) is None
         ):
-            flash("Informe nome, camisa (0 a 99), posicao e equipe validos.", "error")
+            flash("Informe nome, camisa (0 a 99), posição e equipe válidos.", "error")
             return redirect(url_for("list_players"))
         players.insert_one(
             {
@@ -171,6 +198,7 @@ def create_app(database=None):
             teams=all_teams(),
             team_labels=team_labels(),
             positions=POSITIONS,
+            position_labels=POSITION_LABELS,
             edit_player=player,
         )
 
@@ -191,7 +219,7 @@ def create_app(database=None):
             or team_id is None
             or teams.find_one({"_id": team_id}) is None
         ):
-            flash("Informe nome, camisa (0 a 99), posicao e equipe validos.", "error")
+            flash("Informe nome, camisa (0 a 99), posição e equipe válidos.", "error")
             return redirect(url_for("edit_player", identifier=identifier))
         players.update_one(
             {"_id": ObjectId(identifier)},
@@ -249,7 +277,7 @@ def create_app(database=None):
     def create_game():
         game = game_form_data()
         if game is None:
-            flash("Preencha uma partida valida, com equipes diferentes e placares de 0 a 300.", "error")
+            flash("Informe uma partida válida, com equipes diferentes e placares de 0 a 300.", "error")
             return redirect(url_for("list_games"))
         games.insert_one(game)
         flash("Partida cadastrada.", "success")
@@ -271,7 +299,7 @@ def create_app(database=None):
         document_or_404(games, identifier)
         game = game_form_data()
         if game is None:
-            flash("Preencha uma partida valida, com equipes diferentes e placares de 0 a 300.", "error")
+            flash("Informe uma partida válida, com equipes diferentes e placares de 0 a 300.", "error")
             return redirect(url_for("edit_game", identifier=identifier))
         games.update_one({"_id": ObjectId(identifier)}, {"$set": game})
         flash("Partida atualizada.", "success")
@@ -296,14 +324,14 @@ def create_app(database=None):
             if team_id and teams.find_one({"_id": team_id}):
                 results = list(players.find({"team_id": team_id}).sort("name", 1))
             else:
-                flash("Selecione uma equipe valida.", "error")
+                flash("Selecione uma equipe válida.", "error")
         elif kind == "position":
             position = request.args.get("position", "")
             searched = True
             if position in POSITIONS:
                 results = list(players.find({"position": position}).sort("name", 1))
             else:
-                flash("Selecione uma posicao valida.", "error")
+                flash("Selecione uma posição válida.", "error")
         elif kind == "dates":
             start = request.args.get("start", "")
             end = request.args.get("end", "")
@@ -318,7 +346,7 @@ def create_app(database=None):
                     games.find({"played_at": {"$gte": start, "$lte": end}}).sort("played_at", 1)
                 )
             except ValueError:
-                flash("Informe um intervalo de datas valido.", "error")
+                flash("Informe um intervalo de datas válido.", "error")
         elif kind == "team_games":
             team_id = parse_team_id(request.args.get("team_id", ""))
             searched = True
@@ -329,7 +357,7 @@ def create_app(database=None):
                     ).sort("played_at", -1)
                 )
             else:
-                flash("Selecione uma equipe valida.", "error")
+                flash("Selecione uma equipe válida.", "error")
         elif kind == "outcome":
             outcome = request.args.get("outcome", "")
             searched = True
@@ -343,7 +371,7 @@ def create_app(database=None):
                     games.find({"$expr": comparisons[outcome]}).sort("played_at", -1)
                 )
             else:
-                flash("Selecione um resultado valido.", "error")
+                flash("Selecione um resultado válido.", "error")
 
         return render_template(
             "searches.html",
@@ -353,6 +381,7 @@ def create_app(database=None):
             teams=all_teams(),
             team_labels=team_labels(),
             positions=POSITIONS,
+            position_labels=POSITION_LABELS,
         )
 
     return app
@@ -367,6 +396,6 @@ if __name__ == "__main__":
         mongo_client.admin.command("ping")
     except PyMongoError as error:
         raise SystemExit(
-            "Nao foi possivel conectar ao MongoDB. Inicie o servidor e confira MONGODB_URI."
+            "Não foi possível conectar ao MongoDB. Inicie o servidor e confira MONGODB_URI."
         ) from error
     app.run(debug=os.getenv("FLASK_DEBUG") == "1")

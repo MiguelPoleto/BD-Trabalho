@@ -3,23 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Quadra Stats{% endblock %} | Basquete</title>
+  <meta name="theme-color" content="#10251d">
+  <meta name="description" content="Quadra Stats: gestão de equipes, jogadores e partidas de basquete.">
+  <title>{% block title %}Quadra Stats{% endblock %} · Basquete</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="{{ url_for('index') }}">QUADRA <span>STATS</span></a>
-    <nav aria-label="Navegacao principal">
-      <a href="{{ url_for('list_teams') }}">Equipes</a>
-      <a href="{{ url_for('list_players') }}">Jogadores</a>
-      <a href="{{ url_for('list_games') }}">Partidas</a>
-      <a href="{{ url_for('search') }}">Consultas</a>
-    </nav>
+    <div class="topbar-inner">
+      <a class="brand" href="{{ url_for('index') }}" aria-label="Quadra Stats, início">
+        <span class="brand-mark" aria-hidden="true">Q</span>
+        <span>quadra<span class="brand-light">stats</span></span>
+      </a>
+      <nav aria-label="Navegação principal">
+        <a class="{{ 'active' if request.endpoint == 'index' else '' }}" href="{{ url_for('index') }}">Visão geral</a>
+        <a class="{{ 'active' if request.endpoint in ('list_teams', 'edit_team') else '' }}" href="{{ url_for('list_teams') }}">Equipes</a>
+        <a class="{{ 'active' if request.endpoint in ('list_players', 'edit_player') else '' }}" href="{{ url_for('list_players') }}">Jogadores</a>
+        <a class="{{ 'active' if request.endpoint in ('list_games', 'edit_game') else '' }}" href="{{ url_for('list_games') }}">Partidas</a>
+        <a class="{{ 'active' if request.endpoint == 'search' else '' }}" href="{{ url_for('search') }}">Consultas</a>
+      </nav>
+    </div>
   </header>
-  <main class="container">
+  <main class="container" id="main">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        <div class="messages">
+        <div class="messages" role="status" aria-live="polite">
           {% for category, message in messages %}
             <p class="message {{ category }}">{{ message }}</p>
           {% endfor %}
@@ -28,6 +36,11 @@
     {% endwith %}
     {% block content %}{% endblock %}
   </main>
-  <footer>Trabalho 6 - Integracao do MongoDB com uma aplicacao simples</footer>
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>Quadra Stats <span class="footer-divider">·</span> Trabalho 6 de Banco de Dados</span>
+      <a href="{{ url_for('demo_data') }}">Ferramentas de demonstração</a>
+    </div>
+  </footer>
 </body>
 </html>

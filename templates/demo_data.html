@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Dados de demonstração{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <p class="eyebrow">FERRAMENTAS DO PROJETO</p>
+    <h1>Dados de demonstração</h1>
+    <p>Prepare rapidamente equipes, jogadores e partidas para apresentar o sistema.</p>
+  </div>
+  <section class="demo-layout">
+    <article class="panel demo-card">
+      <span class="demo-badge">CARGA DE EXEMPLO</span>
+      <h2>Deixe a quadra pronta.</h2>
+      <p>Adiciona quatro equipes, vinte jogadores e oito partidas fictícias ao banco de dados.</p>
+      <ul class="demo-list">
+        <li><span>04</span> equipes de diferentes cidades</li>
+        <li><span>20</span> jogadores distribuídos pelos elencos</li>
+        <li><span>08</span> partidas com placares e locais</li>
+      </ul>
+      <form method="post" action="{{ url_for('load_demo_data') }}" onsubmit="return confirm('Carregar os dados de demonstração? Os registros de exemplo serão atualizados; os demais dados serão mantidos.')">
+        <button class="button" type="submit">Carregar dados de demonstração <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="demo-note">Você pode executar esta ação novamente. Ela não apaga os dados que cadastrou.</p>
+    </article>
+    <aside class="panel database-card">
+      <p class="eyebrow">BANCO ATUAL</p>
+      <h2>Seu campeonato</h2>
+      <p>Estes são os registros existentes nas coleções MongoDB agora.</p>
+      <div class="database-count"><span>Equipes</span><strong>{{ team_count }}</strong></div>
+      <div class="database-count"><span>Jogadores</span><strong>{{ player_count }}</strong></div>
+      <div class="database-count"><span>Partidas</span><strong>{{ game_count }}</strong></div>
+      <div class="database-note"><span class="live-dot"></span> Banco conectado à aplicação</div>
+    </aside>
+  </section>
+{% endblock %}

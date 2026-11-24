@@ -1,28 +1,41 @@
 {% extends "base.html" %}
 {% block title %}Equipes{% endblock %}
 {% block content %}
-  <div class="page-heading"><p class="eyebrow">CADASTROS</p><h1>Equipes</h1><p>Gerencie os clubes participantes.</p></div>
+  <div class="page-heading">
+    <p class="eyebrow">CADASTROS DO CAMPEONATO</p>
+    <h1>Equipes</h1>
+    <p>Gerencie os clubes e acompanhe os participantes da temporada.</p>
+  </div>
   <section class="panel form-panel">
-    <h2>{{ "Editar equipe" if edit_team else "Nova equipe" }}</h2>
+    <div class="panel-heading">
+      <div><p class="eyebrow">{{ "ATUALIZE OS DADOS" if edit_team else "ADICIONE UM CLUBE" }}</p><h2>{{ "Editar equipe" if edit_team else "Nova equipe" }}</h2></div>
+    </div>
     <form method="post" action="{{ url_for('update_team', identifier=edit_team._id) if edit_team else url_for('create_team') }}" class="form-grid">
-      <label>Nome da equipe<input name="name" required maxlength="80" value="{{ edit_team.name if edit_team else '' }}"></label>
-      <label>Cidade<input name="city" required maxlength="80" value="{{ edit_team.city if edit_team else '' }}"></label>
-      <label>Treinador<input name="coach" maxlength="80" value="{{ edit_team.coach if edit_team else '' }}"></label>
-      <div class="form-actions"><button class="button" type="submit">{{ "Salvar alteracoes" if edit_team else "Cadastrar equipe" }}</button>{% if edit_team %}<a class="button secondary" href="{{ url_for('list_teams') }}">Cancelar</a>{% endif %}</div>
+      <label>Nome da equipe<input name="name" required maxlength="80" placeholder="Ex.: Lobos de Curitiba" value="{{ edit_team.name if edit_team else '' }}"></label>
+      <label>Cidade<input name="city" required maxlength="80" placeholder="Ex.: Curitiba" value="{{ edit_team.city if edit_team else '' }}"></label>
+      <label><span>Treinador <small class="optional">(opcional)</small></span><input name="coach" maxlength="80" placeholder="Nome do treinador" value="{{ edit_team.coach if edit_team else '' }}"></label>
+      <div class="form-actions">
+        <button class="button" type="submit">{{ "Salvar alterações" if edit_team else "Cadastrar equipe" }} <span aria-hidden="true">→</span></button>
+        {% if edit_team %}<a class="button secondary" href="{{ url_for('list_teams') }}">Cancelar</a>{% endif %}
+      </div>
     </form>
   </section>
-  <section class="panel">
-    <h2>Equipes cadastradas <span class="count">{{ teams|length }}</span></h2>
+  <section class="panel table-panel">
+    <div class="section-heading">
+      <div><p class="eyebrow">ELENCOS E CLUBES</p><h2>Equipes cadastradas <span class="count">{{ teams|length }}</span></h2></div>
+    </div>
     {% if teams %}
       <div class="table-wrap"><table>
-        <thead><tr><th>Equipe</th><th>Cidade</th><th>Treinador</th><th>Acoes</th></tr></thead>
+        <thead><tr><th>Equipe</th><th>Cidade</th><th>Treinador</th><th>Ações</th></tr></thead>
         <tbody>{% for team in teams %}
           <tr><td class="primary-cell">{{ team.name }}</td><td>{{ team.city }}</td><td>{{ team.coach or "-" }}</td>
-            <td class="actions"><a href="{{ url_for('edit_team', identifier=team._id) }}">Editar</a>
+            <td class="actions"><a class="action-link" href="{{ url_for('edit_team', identifier=team._id) }}">Editar</a>
               <form method="post" action="{{ url_for('delete_team', identifier=team._id) }}" onsubmit="return confirm('Remover esta equipe?')"><button class="text-button danger-text" type="submit">Remover</button></form>
             </td></tr>
         {% endfor %}</tbody>
       </table></div>
-    {% else %}<p class="empty">Cadastre a primeira equipe para comecar.</p>{% endif %}
+    {% else %}
+      <div class="empty-state"><span class="empty-icon" aria-hidden="true">EQ</span><p>Nenhuma equipe cadastrada ainda.</p><span>Use o formulário acima para começar.</span></div>
+    {% endif %}
   </section>
 {% endblock %}

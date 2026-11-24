@@ -1,31 +1,35 @@
 {% extends "base.html" %}
 {% block title %}Jogadores{% endblock %}
 {% block content %}
-  <div class="page-heading"><p class="eyebrow">CADASTROS</p><h1>Jogadores</h1><p>Monte e atualize os elencos das equipes.</p></div>
+  <div class="page-heading">
+    <p class="eyebrow">CADASTROS DO CAMPEONATO</p>
+    <h1>Jogadores</h1>
+    <p>Monte os elencos e organize os atletas por posição e equipe.</p>
+  </div>
   <section class="panel form-panel">
-    <h2>{{ "Editar jogador" if edit_player else "Novo jogador" }}</h2>
+    <div class="panel-heading"><div><p class="eyebrow">{{ "ATUALIZE OS DADOS" if edit_player else "ADICIONE AO ELENCO" }}</p><h2>{{ "Editar jogador" if edit_player else "Novo jogador" }}</h2></div></div>
     {% if teams %}
       <form method="post" action="{{ url_for('update_player', identifier=edit_player._id) if edit_player else url_for('create_player') }}" class="form-grid">
-        <label>Nome<input name="name" required maxlength="100" value="{{ edit_player.name if edit_player else '' }}"></label>
-        <label>Camisa<input name="number" type="number" min="0" max="99" required value="{{ edit_player.number if edit_player else '' }}"></label>
-        <label>Posicao<select name="position" required><option value="">Selecione</option>{% for position in positions %}<option value="{{ position }}" {% if edit_player and edit_player.position == position %}selected{% endif %}>{{ position }}</option>{% endfor %}</select></label>
-        <label>Equipe<select name="team_id" required><option value="">Selecione</option>{% for team in teams %}<option value="{{ team._id }}" {% if edit_player and edit_player.team_id == team._id %}selected{% endif %}>{{ team.name }}</option>{% endfor %}</select></label>
-        <div class="form-actions"><button class="button" type="submit">{{ "Salvar alteracoes" if edit_player else "Cadastrar jogador" }}</button>{% if edit_player %}<a class="button secondary" href="{{ url_for('list_players') }}">Cancelar</a>{% endif %}</div>
+        <label>Nome do jogador<input name="name" required maxlength="100" placeholder="Nome completo" value="{{ edit_player.name if edit_player else '' }}"></label>
+        <label>Número da camisa<input name="number" type="number" min="0" max="99" required placeholder="Ex.: 23" value="{{ edit_player.number if edit_player else '' }}"></label>
+        <label>Posição<select name="position" required><option value="">Selecione uma posição</option>{% for position in positions %}<option value="{{ position }}" {% if edit_player and edit_player.position == position %}selected{% endif %}>{{ position_labels.get(position, position) }}</option>{% endfor %}</select></label>
+        <label>Equipe<select name="team_id" required><option value="">Selecione uma equipe</option>{% for team in teams %}<option value="{{ team._id }}" {% if edit_player and edit_player.team_id == team._id %}selected{% endif %}>{{ team.name }}</option>{% endfor %}</select></label>
+        <div class="form-actions"><button class="button" type="submit">{{ "Salvar alterações" if edit_player else "Cadastrar jogador" }} <span aria-hidden="true">→</span></button>{% if edit_player %}<a class="button secondary" href="{{ url_for('list_players') }}">Cancelar</a>{% endif %}</div>
       </form>
-    {% else %}<p class="empty">Cadastre uma equipe antes de adicionar jogadores.</p>{% endif %}
+    {% else %}<div class="inline-notice">Cadastre uma equipe antes de adicionar jogadores. <a href="{{ url_for('list_teams') }}">Ir para equipes →</a></div>{% endif %}
   </section>
-  <section class="panel">
-    <h2>Jogadores cadastrados <span class="count">{{ players|length }}</span></h2>
+  <section class="panel table-panel">
+    <div class="section-heading"><div><p class="eyebrow">ATLETAS INSCRITOS</p><h2>Jogadores cadastrados <span class="count">{{ players|length }}</span></h2></div></div>
     {% if players %}
       <div class="table-wrap"><table>
-        <thead><tr><th>Nome</th><th>Camisa</th><th>Posicao</th><th>Equipe</th><th>Acoes</th></tr></thead>
+        <thead><tr><th>Jogador</th><th>Camisa</th><th>Posição</th><th>Equipe</th><th>Ações</th></tr></thead>
         <tbody>{% for player in players %}
-          <tr><td class="primary-cell">{{ player.name }}</td><td>{{ player.number }}</td><td>{{ player.position }}</td><td>{{ team_labels.get(player.team_id|string, "Equipe removida") }}</td>
-            <td class="actions"><a href="{{ url_for('edit_player', identifier=player._id) }}">Editar</a>
+          <tr><td class="primary-cell">{{ player.name }}</td><td>{{ player.number }}</td><td>{{ position_labels.get(player.position, player.position) }}</td><td>{{ team_labels.get(player.team_id|string, "Equipe removida") }}</td>
+            <td class="actions"><a class="action-link" href="{{ url_for('edit_player', identifier=player._id) }}">Editar</a>
               <form method="post" action="{{ url_for('delete_player', identifier=player._id) }}" onsubmit="return confirm('Remover este jogador?')"><button class="text-button danger-text" type="submit">Remover</button></form>
             </td></tr>
         {% endfor %}</tbody>
       </table></div>
-    {% else %}<p class="empty">Nenhum jogador cadastrado ainda.</p>{% endif %}
+    {% else %}<div class="empty-state"><span class="empty-icon" aria-hidden="true">JG</span><p>Nenhum jogador cadastrado ainda.</p><span>Adicione atletas ao elenco pelo formulário acima.</span></div>{% endif %}
   </section>
 {% endblock %}

@@ -7,7 +7,7 @@ from pymongo.errors import PyMongoError
 
 TEAMS = [
     ("64a000000000000000000001", "Lobos de Curitiba", "Curitiba", "Carlos Mendes"),
-    ("64a000000000000000000002", "Tubaroes de Santos", "Santos", "Renata Lima"),
+    ("64a000000000000000000002", "Tubarões de Santos", "Santos", "Renata Lima"),
     ("64a000000000000000000003", "Falcões de Campinas", "Campinas", "Paulo Rocha"),
     ("64a000000000000000000004", "Gigantes de Belo Horizonte", "Belo Horizonte", "Marina Costa"),
 ]
@@ -21,8 +21,8 @@ PLAYERS = [
     ("64b000000000000000000006", "Diego Santos", 3, "Armador", 1),
     ("64b000000000000000000007", "Felipe Costa", 8, "Ala-armador", 1),
     ("64b000000000000000000008", "Caio Ribeiro", 15, "Ala", 1),
-    ("64b000000000000000000009", "Andre Carvalho", 21, "Ala-pivo", 1),
-    ("64b00000000000000000000a", "Vitor Fernandes", 44, "Pivo", 1),
+    ("64b000000000000000000009", "André Carvalho", 21, "Ala-pivo", 1),
+    ("64b00000000000000000000a", "Vítor Fernandes", 44, "Pivo", 1),
     ("64b00000000000000000000b", "Gustavo Pereira", 2, "Armador", 2),
     ("64b00000000000000000000c", "Enzo Rodrigues", 10, "Ala-armador", 2),
     ("64b00000000000000000000d", "Heitor Gomes", 18, "Ala", 2),
@@ -37,18 +37,18 @@ PLAYERS = [
 
 GAMES = [
     ("64c000000000000000000001", 0, 1, 82, 76, "2026-03-01", "Arena Curitiba"),
-    ("64c000000000000000000002", 2, 3, 91, 88, "2026-03-02", "Ginasio Campinas"),
+    ("64c000000000000000000002", 2, 3, 91, 88, "2026-03-02", "Ginásio Campinas"),
     ("64c000000000000000000003", 1, 2, 74, 80, "2026-03-08", "Arena Santos"),
     ("64c000000000000000000004", 3, 0, 79, 85, "2026-03-09", "Arena BH"),
     ("64c000000000000000000005", 0, 2, 96, 89, "2026-03-15", "Arena Curitiba"),
     ("64c000000000000000000006", 1, 3, 87, 81, "2026-03-16", "Arena Santos"),
-    ("64c000000000000000000007", 2, 0, 77, 83, "2026-03-22", "Ginasio Campinas"),
+    ("64c000000000000000000007", 2, 0, 77, 83, "2026-03-22", "Ginásio Campinas"),
     ("64c000000000000000000008", 3, 1, 92, 86, "2026-03-23", "Arena BH"),
 ]
 
 
 def populate_database(database):
-    # IDs fixos tornam a carga repetivel sem duplicar os dados de demonstracao.
+    # IDs fixos permitem repetir a carga sem duplicar os dados de demonstração.
     for identifier, name, city, coach in TEAMS:
         database.teams.replace_one(
             {"_id": ObjectId(identifier)},
@@ -102,7 +102,7 @@ if __name__ == "__main__":
         counts = populate_database(database)
     except PyMongoError as error:
         raise SystemExit(
-            "Nao foi possivel conectar ao MongoDB. Inicie o servidor e confira MONGODB_URI."
+            "Não foi possível conectar ao MongoDB. Inicie o servidor e confira MONGODB_URI."
         ) from error
     finally:
         client.close()
