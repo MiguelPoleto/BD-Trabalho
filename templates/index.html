@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Inicio{% endblock %}
+{% block content %}
+  <section class="hero">
+    <p class="eyebrow">GESTAO DE BASQUETE</p>
+    <h1>Os dados do jogo,<br><span>em um so lugar.</span></h1>
+    <p>Cadastre equipes, elencos e partidas. Consulte os dados do campeonato em poucos cliques.</p>
+    <a class="button" href="{{ url_for('search') }}">Explorar consultas</a>
+  </section>
+  <section class="stats">
+    <article class="stat"><span>Equipes</span><strong>{{ team_count }}</strong></article>
+    <article class="stat"><span>Jogadores</span><strong>{{ player_count }}</strong></article>
+    <article class="stat"><span>Partidas</span><strong>{{ game_count }}</strong></article>
+  </section>
+  <section class="panel">
+    <div class="section-heading">
+      <div><p class="eyebrow">PLACARES</p><h2>Partidas recentes</h2></div>
+      <a href="{{ url_for('list_games') }}">Ver todas &rarr;</a>
+    </div>
+    {% if latest_games %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Data</th><th>Mandante</th><th>Placar</th><th>Visitante</th><th>Local</th></tr></thead>
+          <tbody>
+          {% for game in latest_games %}
+            <tr>
+              <td>{{ game.played_at }}</td>
+              <td>{{ team_labels.get(game.home_team_id|string, "Equipe removida") }}</td>
+              <td class="score">{{ game.home_score }} : {{ game.away_score }}</td>
+              <td>{{ team_labels.get(game.away_team_id|string, "Equipe removida") }}</td>
+              <td>{{ game.venue or "-" }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="empty">Nenhuma partida cadastrada ainda.</p>
+    {% endif %}
+  </section>
+{% endblock %}

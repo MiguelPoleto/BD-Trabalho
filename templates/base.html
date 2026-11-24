@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Quadra Stats{% endblock %} | Basquete</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('index') }}">QUADRA <span>STATS</span></a>
+    <nav aria-label="Navegacao principal">
+      <a href="{{ url_for('list_teams') }}">Equipes</a>
+      <a href="{{ url_for('list_players') }}">Jogadores</a>
+      <a href="{{ url_for('list_games') }}">Partidas</a>
+      <a href="{{ url_for('search') }}">Consultas</a>
+    </nav>
+  </header>
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="messages">
+          {% for category, message in messages %}
+            <p class="message {{ category }}">{{ message }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer>Trabalho 6 - Integracao do MongoDB com uma aplicacao simples</footer>
+</body>
+</html>

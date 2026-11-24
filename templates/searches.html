@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Consultas{% endblock %}
+{% block content %}
+  <div class="page-heading"><p class="eyebrow">EXPLORAR DADOS</p><h1>Consultas</h1><p>Cinco buscas para acompanhar elencos e resultados.</p></div>
+  <section class="search-grid">
+    <form class="panel search-card" method="get"><input type="hidden" name="kind" value="roster"><h2>1. Elenco por equipe</h2><label>Equipe<select name="team_id" required><option value="">Selecione</option>{% for team in teams %}<option value="{{ team._id }}">{{ team.name }}</option>{% endfor %}</select></label><button class="button" type="submit">Buscar jogadores</button></form>
+    <form class="panel search-card" method="get"><input type="hidden" name="kind" value="position"><h2>2. Jogadores por posicao</h2><label>Posicao<select name="position" required><option value="">Selecione</option>{% for position in positions %}<option>{{ position }}</option>{% endfor %}</select></label><button class="button" type="submit">Buscar jogadores</button></form>
+    <form class="panel search-card" method="get"><input type="hidden" name="kind" value="dates"><h2>3. Partidas por periodo</h2><label>De<input type="date" name="start" required></label><label>Ate<input type="date" name="end" required></label><button class="button" type="submit">Buscar partidas</button></form>
+    <form class="panel search-card" method="get"><input type="hidden" name="kind" value="team_games"><h2>4. Historico de uma equipe</h2><label>Equipe<select name="team_id" required><option value="">Selecione</option>{% for team in teams %}<option value="{{ team._id }}">{{ team.name }}</option>{% endfor %}</select></label><button class="button" type="submit">Buscar partidas</button></form>
+    <form class="panel search-card" method="get"><input type="hidden" name="kind" value="outcome"><h2>5. Partidas por resultado</h2><label>Resultado<select name="outcome" required><option value="">Selecione</option><option value="home">Vitoria do mandante</option><option value="away">Vitoria do visitante</option></select></label><button class="button" type="submit">Buscar partidas</button></form>
+  </section>
+  {% if searched %}
+    <section class="panel results">
+      <h2>Resultados <span class="count">{{ results|length }}</span></h2>
+      {% if results %}
+        <div class="table-wrap"><table>
+          {% if kind == "roster" or kind == "position" %}
+            <thead><tr><th>Nome</th><th>Camisa</th><th>Posicao</th><th>Equipe</th></tr></thead>
+            <tbody>{% for player in results %}<tr><td class="primary-cell">{{ player.name }}</td><td>{{ player.number }}</td><td>{{ player.position }}</td><td>{{ team_labels.get(player.team_id|string, "Equipe removida") }}</td></tr>{% endfor %}</tbody>
+          {% else %}
+            <thead><tr><th>Data</th><th>Mandante</th><th>Placar</th><th>Visitante</th><th>Local</th></tr></thead>
+            <tbody>{% for game in results %}<tr><td>{{ game.played_at }}</td><td>{{ team_labels.get(game.home_team_id|string, "Equipe removida") }}</td><td class="score">{{ game.home_score }} : {{ game.away_score }}</td><td>{{ team_labels.get(game.away_team_id|string, "Equipe removida") }}</td><td>{{ game.venue or "-" }}</td></tr>{% endfor %}</tbody>
+          {% endif %}
+        </table></div>
+      {% else %}<p class="empty">Nenhum registro encontrado para essa busca.</p>{% endif %}
+    </section>
+  {% endif %}
+{% endblock %}
